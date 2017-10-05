@@ -6,13 +6,18 @@ Use dataset/data2record_cmc.py to convert nii file to rfrecord
 
 ## Training
 python main.py \\
+
     --train_dir=./logs \\
+
     --learning_rate=0.01 \\
+
     --model=cmc \\
+
     { ... other configuation on main.py }
 
 ## Evaluation
 python eval_cmc.py \\
+
     --checkpoint_dir=./logs \\
 
 ## Update:
