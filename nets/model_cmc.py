@@ -100,8 +100,6 @@ def DTS(X, r, name):
     return X
 
 def deconv_layer(inputT, f_shape, output_shape, stride=2, name=None, reuse=False):
-        return BilinearAdditive(inputT, 2, name)
-        #return DTS(inputT, 2, name)
         strides = [1, stride, stride, 1]
         def get_deconv_filter(f_shape):
             """
@@ -147,19 +145,9 @@ class Model(object):
             net = tf.nn.conv3d(net, kernel3D_2, [1, 1, 1, 1, 1], padding='VALID')
         return net
 
-    def block(self, inputs, start_channel, reuse=False, is_training=True, rate=1, scope=None):
-        with slim.arg_scope([slim.conv2d],
-                            activation_fn=tf.nn.relu,
-                            normalizer_fn=slim.batch_norm,
-                          normalizer_params={'is_training': is_training},
-                            weights_initializer=tf.truncated_normal_initializer(0.0, 0.01),
-                            weights_regularizer=slim.l2_regularizer(0.0005),
-                            reuse=reuse):
-            net = slim.repeat(inputs, 2, slim.conv2d, start_channel, [3, 3], rate=rate, scope=scope)
-            return tf.add(net, inputs)
-
     def encoder(self, inputs, is_training=True, reuse=False):
         start_channel = 40
+        k_size = 3
         end_points = {}
         with slim.arg_scope([slim.conv2d],
                             activation_fn=tf.nn.relu,
@@ -188,7 +176,7 @@ class Model(object):
 
             return [end_points['conv1'], end_points['conv2'], end_points['conv3'], end_points['conv4'], end_points['conv5']]
 
-    def decoder(self, net, f1, f2, f3, f4, is_training=True, reuse=False):
+    def decoder(self, net, f1, f2, f3, f4, is_training=True, reuse=True):
         start_channel = 40
         batch_size, _, _, _ = net.get_shape().as_list()
         with slim.arg_scope([slim.conv2d],
@@ -200,25 +188,26 @@ class Model(object):
                             reuse=reuse):
 
             _, out_h, out_w, _ = net.get_shape().as_list()
-            net = deconv_layer(net, [2, 2, start_channel, start_channel], [batch_size, out_h*2, out_w*2, start_channel], 2, "up1")
+            net = deconv_layer(net, [2, 2, start_channel, start_channel], [batch_size, out_h*2, out_w*2, start_channel], 2, "up1", reuse=reuse)
+            print('decode net', net.get_shape(), f4.get_shape())
             net = tf.multiply(f4, net)
             net = slim.repeat(net, 2, slim.conv2d, start_channel, [3, 3], scope='conv6')
             net = slim.dropout(net, 0.8, is_training=is_training)
             print(net.get_shape()) #30
             _, out_h, out_w, _ = net.get_shape().as_list()
-            net = deconv_layer(net, [2, 2, start_channel, start_channel], [batch_size, out_h*2, out_w*2, start_channel], 2, "up2")
+            net = deconv_layer(net, [2, 2, start_channel, start_channel], [batch_size, out_h*2, out_w*2, start_channel], 2, "up2", reuse=reuse)
             net = tf.multiply(f3, net)
             net = slim.repeat(net, 2, slim.conv2d, start_channel, [3, 3], scope='conv7')
             net = slim.dropout(net, 0.8, is_training=is_training)
             print(net.get_shape()) # 60
             _, out_h, out_w, _ = net.get_shape().as_list()
-            net = deconv_layer(net, [2, 2, start_channel, start_channel], [batch_size, out_h*2, out_w*2, start_channel], 2, "up3")
+            net = deconv_layer(net, [2, 2, start_channel, start_channel], [batch_size, out_h*2, out_w*2, start_channel], 2, "up3", reuse=reuse)
             net = tf.multiply(f2, net)
             net = slim.repeat(net, 2, slim.conv2d, start_channel, [3, 3], scope='conv8')
             net = slim.dropout(net, 0.8, is_training=is_training)
             print(net.get_shape()) # 120
             _, out_h, out_w, _ = net.get_shape().as_list()
-            net = deconv_layer(net, [2, 2, start_channel, start_channel], [batch_size, out_h*2, out_w*2, start_channel], 2, "up4")
+            net = deconv_layer(net, [2, 2, start_channel, start_channel], [batch_size, out_h*2, out_w*2, start_channel], 2, "up4", reuse=reuse)
             net = tf.multiply(f1, net)
             net = slim.repeat(net, 2, slim.conv2d, start_channel, [3, 3], scope='conv9')
             net = slim.dropout(net, 0.8, is_training=is_training)

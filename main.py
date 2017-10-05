@@ -9,8 +9,6 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),'..')))
 import tf_utils
 from deployment import model_deploy
-import dataset.load_batch as load_batch
-import dataset.load_batch_patch as load_batch_patch
 import dataset.load_batch_cmc as load_batch_cmc
 
 import pickle
