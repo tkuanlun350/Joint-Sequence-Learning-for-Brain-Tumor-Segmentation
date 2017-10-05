@@ -14,7 +14,7 @@ import dataset.load_batch_patch as load_batch_patch
 import dataset.load_batch_cmc as load_batch_cmc
 
 import pickle
-from nets import model_unet, model_patch, model_cmc
+from nets import model_cmc
 from tensorflow.contrib.slim.python.slim.learning import train_step
 from tensorflow.python.framework import ops
 # from beholder.beholder import Beholder
@@ -227,15 +227,8 @@ def main(_):
         # Create global_step
         with tf.device(deploy_config.variables_device()):
             global_step = slim.create_global_step()
-        if (FLAGS.model == 'unet'):
-            print("Use UNET Model")
-            net = model_unet.Model()
-        elif (FLAGS.model == 'patch'):
-            print("Use Patch Model")
-            net = model_patch.Model()
-        elif (FLAGS.model == 'cmc'):
-            print("Use CMC Model")
-            net = model_cmc.Model()
+        
+        net = model_cmc.Model()
 
         with tf.device(deploy_config.inputs_device()):
             if (FLAGS.model == 'unet'):

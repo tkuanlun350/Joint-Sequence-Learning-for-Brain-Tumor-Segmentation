@@ -1,7 +1,7 @@
 import tensorflow as tf
 import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),'..')))
-from nets import model_unet, model_cmc
+from nets import model_cmc
 from dataset.utils import  norm_image_by_patient, eval_single
 import glob
 import os
